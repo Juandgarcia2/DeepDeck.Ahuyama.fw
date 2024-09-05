@@ -105,6 +105,12 @@ uint8_t menu_rgb_mode_2(void);
 uint8_t menu_rgb_mode_3(void);
 uint8_t menu_rgb_mode_4(void);
 
+uint8_t menu_send_brightness_level(uint8_t value);
+uint8_t menu_send_brightness_level_25(void);
+uint8_t menu_send_brightness_level_50(void);
+uint8_t menu_send_brightness_level_75(void);
+uint8_t menu_send_brightness_level_100(void);
+
 static menu_t menu_main;
 extern menu_item_t m_main_array[];
 
