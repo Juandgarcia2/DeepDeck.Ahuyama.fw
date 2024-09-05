@@ -48,7 +48,7 @@ enum
 {
   NONE = -1,
   MAIN_MENU = 0,
-  BLUETOOTH_MENU,
+  // BLUETOOTH_MENU,
   LED_MODE_MENU,
   LED_BRIGHT_MENU,
   menu_num
@@ -59,7 +59,7 @@ enum
 char menu_titles[menu_num][MENU_CHAR_NUM] =
     {
         MAIN_MENU_TITLE,
-        "Bluetooth",
+        // "Bluetooth",
         "LED modes",
         "Brightness"};
 
@@ -72,7 +72,7 @@ char menu_subtitles[menu_num][MENU_CHAR_NUM] =
 // --------------------Main Menu!-------------------------------
 char menu_main_description[7][MENU_CHAR_NUM] =
     {
-        "Bluetooth",
+        "Disconnect Bluetooth",
         "LED configuration",
         "Bright config",
         "DancingBerlin",
@@ -81,11 +81,11 @@ char menu_main_description[7][MENU_CHAR_NUM] =
 menu_item_t m_main_array[] =
     {
         // Descripción                 //Acción             //Siguiente menu      ó     //Función
-        {menu_main_description[0],    MA_MENU,                BLUETOOTH_MENU,             0},
-        {menu_main_description[1], MA_MENU, LED_MODE_MENU, 0},
-        {menu_main_description[2], MA_MENU, LED_BRIGHT_MENU, 0},
-        {menu_main_description[3], MA_FUNCTION, NONE, &berlinDance},
-        {menu_main_description[4], MA_FUNCTION, NONE, &menu_exit},
+        {menu_main_description[0],    MA_FUNCTION,                NONE,             &disconectBLE},
+        {menu_main_description[1],    MA_MENU,                    LED_MODE_MENU,                0},
+        {menu_main_description[2],    MA_MENU,                    LED_BRIGHT_MENU,              0},
+        {menu_main_description[3],    MA_FUNCTION,                NONE,              &berlinDance},
+        {menu_main_description[4],    MA_FUNCTION,                NONE,                &menu_exit},
         {0, MA_END, 0, 0}};
 
 // ------------------Brightness Menu-------------------------------
@@ -105,19 +105,19 @@ menu_item_t m_brightness_array[] =
     {menu_bright_description[3],      MA_FUNCTION,            NONE,                       &menu_send_brightness_level_100},
     {0,                           MA_END,                 0,                          0}
 };
-// ------------------Bluetooth Menu-------------------------------
-char menu_bt_description[2][MENU_CHAR_NUM] =
-{
-    "Enable",
-    "Disable"
-};
-menu_item_t m_bluetooth_array[] =
-{
-    //Descripción                 //Acción             //Siguiente menu      ó     //Función
-    {menu_bt_description[0],      MA_FUNCTION,            NONE,                       &splashScreen},
-    {menu_bt_description[1],      MA_FUNCTION,            NONE,                       &splashScreen},
-    {0,                           MA_END,                 0,                          0}
-};
+// // ------------------Bluetooth Menu-------------------------------
+// char menu_bt_description[2][MENU_CHAR_NUM] =
+// {
+//     "Enable",
+//     "Disable"
+// };
+// menu_item_t m_bluetooth_array[] =
+// {
+//     //Descripción                 //Acción             //Siguiente menu      ó     //Función
+//     {menu_bt_description[0],      MA_FUNCTION,            NONE,                       &splashScreen},
+//     {menu_bt_description[1],      MA_FUNCTION,            NONE,                       &splashScreen},
+//     {0,                           MA_END,                 0,                          0}
+// };
 
 // ------------------LED modes -------------------------------
 char menu_led_mode[5][MENU_CHAR_NUM] =
@@ -143,7 +143,7 @@ menu_t menu_array[menu_num] =
     {
         // Title                      //Subtitle                      //Item array
         {menu_titles[MAIN_MENU], menu_subtitles[MAIN_MENU], &m_main_array},
-        {menu_titles[BLUETOOTH_MENU], menu_subtitles[BLUETOOTH_MENU], &m_bluetooth_array},
+        // {menu_titles[BLUETOOTH_MENU], menu_subtitles[BLUETOOTH_MENU], &m_bluetooth_array},
         {menu_titles[LED_MODE_MENU], menu_subtitles[LED_MODE_MENU], &m_led_array},
         {menu_titles[LED_BRIGHT_MENU], menu_subtitles[LED_BRIGHT_MENU], &m_brightness_array}, 
 };
@@ -531,6 +531,12 @@ uint8_t menu_send_brightness_level(uint8_t value)
 }
 
 // ToDo: Optimize this
+uint8_t disconectBLE(void){
+  disconnect_ble();
+  splashScreen();
+ return mret_exit;
+}
+
 uint8_t menu_send_brightness_level_25(void){
   return menu_send_brightness_level(25);
 }
@@ -571,3 +577,5 @@ uint8_t menu_rgb_mode_4(void)
 {
   return menu_send_rgb_mode(4);
 }
+
+

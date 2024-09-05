@@ -111,10 +111,14 @@ uint8_t menu_send_brightness_level_50(void);
 uint8_t menu_send_brightness_level_75(void);
 uint8_t menu_send_brightness_level_100(void);
 
+uint8_t disconectBLE(void);
+
 static menu_t menu_main;
 extern menu_item_t m_main_array[];
 
 extern menu_t menu_bluetooth; 
 extern menu_item_t m_bluetooth_array[];
+
+extern void disconnect_ble();
 
 #endif
