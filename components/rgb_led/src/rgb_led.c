@@ -182,7 +182,7 @@ void key_led_modes(void)
         if (xQueueReceive(keyled_q, &(led_mode), 0))
         {
             ESP_LOGI(TAG, "Received message from Q");
-            ESP_LOGW(TAG, "mode = %d saturation = %d, rgb[%d, %d, %d]", led_mode.mode, led_mode.S, led_mode.rgb[0], led_mode.rgb[1], led_mode.rgb[2]);
+            ESP_LOGW(TAG, "mode = %d saturation = %d brightness = %d, rgb[%d, %d, %d]", led_mode.mode, led_mode.S, led_mode.V, led_mode.rgb[0], led_mode.rgb[1], led_mode.rgb[2]);
             // new_mode = led_mode.mode;
             if (led_mode.mode != modes)
             {
@@ -280,9 +280,9 @@ void key_led_modes(void)
                 // TO DO
                 // Change led_mode.brightness by led_mode.value
                 // add led_mode.hue
-
-                hsv2rgb(hue, led_mode.V, led_mode.S, &red, &green, &blue);
-                hsv2rgb(hue2, led_mode.V, led_mode.S, &red2, &green2, &blue2);
+            
+                hsv2rgb(hue, led_mode.S, led_mode.V, &red, &green, &blue);
+                hsv2rgb(hue2, led_mode.S, led_mode.V, &red2, &green2, &blue2);
                 // Write RGB values to strip driver
                 ESP_ERROR_CHECK(rgb_key->set_pixel(rgb_key, i, red, green, blue));
             }
@@ -303,7 +303,7 @@ void key_led_modes(void)
                 {
                     // Build RGB values
                     hue = j * 360 / RGB_LED_KEYBOARD_NUMBER + start_rgb;
-                    hsv2rgb(hue, led_mode.V, led_mode.S, &red, &green, &blue);
+                    hsv2rgb(hue, led_mode.S, led_mode.V, &red, &green, &blue);
                     // Write RGB values to strip driver
                     ESP_ERROR_CHECK(rgb_key->set_pixel(rgb_key, j, red, green, blue));
                 }

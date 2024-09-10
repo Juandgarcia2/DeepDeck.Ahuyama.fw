@@ -85,6 +85,7 @@ void oled_task(void *pvParameters)
 				update_oled();
 				CON_LOG_FLAG = false;
 			}
+
 			break;
 		case S_SETTINGS: // Settings mode, showing the internal menu
 			disable_interrup_pin();

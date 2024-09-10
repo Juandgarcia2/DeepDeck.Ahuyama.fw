@@ -237,7 +237,7 @@ void wifi_connected_oled(char *ip_char)
 // Waiting for connecting animation
 void waiting_oled(void)
 {
-	char waiting[] = "Waiting for ";
+	char waiting[] = "Waiting for bluetooth";
 	char conn[] = "connection";
 
 #ifdef BATT_STAT
