@@ -295,7 +295,7 @@ void key_led_modes(void)
             vTaskDelay(pdMS_TO_TICKS(RGB_LED_REFRESH_SPEED));
         }
 
-        if (modes == 3) // Rainbow
+        if (modes == 3) // Spark
         {
             for (int i = 0; i < 3; i++)
             {
@@ -314,6 +314,109 @@ void key_led_modes(void)
                 vTaskDelay(pdMS_TO_TICKS(RGB_LED_REFRESH_SPEED));
             }
             start_rgb += 60;
+        }
+
+        if (modes == 6) // fireball
+        {
+            #define FIREBALL_SIZE 1  // Size of the fireball
+            #define FIREBALL_BRIGHTNESS 255  // Maximum brightness of the fireball
+            // Increment fireball position
+            static int fireballPosition = 0;
+            fireballPosition += 1; // Adjust this increment for the speed of the fireball
+            if (fireballPosition >= RGB_LED_KEYBOARD_NUMBER + FIREBALL_SIZE) fireballPosition = 0;
+
+            // Loop through each LED
+            for (int i = 0; i < RGB_LED_KEYBOARD_NUMBER; i++)
+            {
+                // Calculate the distance from the center of the fireball
+                int distance = abs(i - fireballPosition);
+                
+                // Determine the brightness based on distance
+                uint8_t brightness = FIREBALL_BRIGHTNESS;
+                if (distance < FIREBALL_SIZE) {
+                    brightness = (uint8_t)(FIREBALL_BRIGHTNESS * (1.0 - (float)distance / FIREBALL_SIZE));
+                } else {
+                    brightness = 0;
+                }
+
+                // Set color and brightness for the fireball effect
+                uint8_t red, green, blue;
+                if (brightness > 0) {
+                    // A bright color for the fireball
+                    red = brightness;
+                    green = 0;
+                    blue = 0;
+                } else {
+                    red = green = blue = 0;
+                }
+
+                // Write RGB values to the strip driver
+                ESP_ERROR_CHECK(rgb_key->set_pixel(rgb_key, i, red, green, blue));
+            }
+
+            // Set the notification LEDs to the same progressive color
+            ESP_ERROR_CHECK(rgb_notif->set_pixel(rgb_notif, 0, red, green, blue));
+            ESP_ERROR_CHECK(rgb_notif->set_pixel(rgb_notif, 1, red, green, blue));
+
+            // Flush RGB values to LEDs
+            ESP_ERROR_CHECK(rgb_key->refresh(rgb_key, 100));
+            // ESP_ERROR_CHECK(rgb_notif->refresh(rgb_notif, 100));
+
+            // Delay to control the speed of the effect
+            vTaskDelay(pdMS_TO_TICKS(RGB_LED_REFRESH_SPEED));
+        }
+
+        if (modes == 7) // Rainbow
+        {
+            #define RAINBOW_SIZE 8  // Size of the fireball
+            #define RAINBOW_BRIGHTNESS 255  // Maximum brightness of the fireball
+            static int fireballPosition = 0;
+            static uint16_t hue = 0; // Initialize hue for progressive color change
+
+            fireballPosition += 1; // Adjust this increment for the speed of the fireball
+            if (fireballPosition >= RGB_LED_KEYBOARD_NUMBER + RAINBOW_SIZE) {
+                fireballPosition = 0;
+                hue += 10; // Change color for each new cycle
+                if (hue >= 360) hue = 0; // Wrap hue around at 360 degrees
+            }
+
+            // Loop through each LED
+            for (int i = 0; i < RGB_LED_KEYBOARD_NUMBER; i++)
+            {
+                // Calculate the distance from the center of the fireball
+                int distance = abs(i - fireballPosition);
+
+                // Determine the brightness based on distance
+                uint8_t brightness = RAINBOW_BRIGHTNESS;
+                if (distance < RAINBOW_SIZE) {
+                    brightness = (uint8_t)(RAINBOW_BRIGHTNESS * (1.0 - (float)distance / RAINBOW_SIZE));
+                } else {
+                    brightness = 0;
+                }
+
+                // Calculate color based on hue
+                uint8_t red, green, blue;
+                hsv2rgb(hue, 255, 255, &red, &green, &blue);
+
+                // Scale color by brightness for fireball effect
+                red = (red * brightness) / 255;
+                green = (green * brightness) / 255;
+                blue = (blue * brightness) / 255;
+
+                // Write RGB values to the strip driver
+                ESP_ERROR_CHECK(rgb_key->set_pixel(rgb_key, i, red, green, blue));
+            }
+
+            // Set the notification LEDs to the same progressive color
+            ESP_ERROR_CHECK(rgb_notif->set_pixel(rgb_notif, 0, red, green, blue));
+            ESP_ERROR_CHECK(rgb_notif->set_pixel(rgb_notif, 1, red, green, blue));
+
+            // Flush RGB values to LEDs
+            ESP_ERROR_CHECK(rgb_key->refresh(rgb_key, 100));
+            ESP_ERROR_CHECK(rgb_notif->refresh(rgb_notif, 100));
+
+            // Delay to control the speed of the effect
+            vTaskDelay(pdMS_TO_TICKS(RGB_LED_REFRESH_SPEED));
         }
 
         /*
