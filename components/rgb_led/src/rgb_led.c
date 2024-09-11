@@ -318,7 +318,7 @@ void key_led_modes(void)
 
         if (modes == 6) // fireball
         {
-            #define FIREBALL_SIZE 8  // Size of the fireball
+            #define FIREBALL_SIZE 1  // Size of the fireball
             #define FIREBALL_BRIGHTNESS 255  // Maximum brightness of the fireball
             // Increment fireball position
             static int fireballPosition = 0;
