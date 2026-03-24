@@ -39,6 +39,7 @@
 #include "battery_monitor.h"
 #include "nvs_keymaps.h"
 #include "server_nvs.h"
+// #include "esp_wifi.h"
 
 static const char *TAG = "	OLED";
 
@@ -74,12 +75,58 @@ void erase_area(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 	u8g2_SetDrawColor(&u8g2, 1);
 }
 
+
+
+static const unsigned char icon_bt_bits[] U8X8_PROGMEM = {
+    0x08, 0x18, 0x28, 0x4A, 0x3C, 0x4A, 0x28, 0x18
+};
+
+static const unsigned char icon_wifi_bits[] U8X8_PROGMEM = {
+    0x18, 0x42, 0x81, 0x00, 0x3C, 0x42, 0x00, 0x18
+};
+
+// bool is_connected_to_router(void) {
+//     wifi_ap_record_t ap_info;
+//     esp_err_t err = esp_wifi_sta_get_ap_info(&ap_info);
+    
+//     if (err == ESP_OK) {
+//         return true; 
+//     } else {
+//         return false; // Desconectado o en modo AP
+//     }
+// }
+
+void oled_draw_status_bar(uint8_t wifi_bt, bool status_ok) 
+{
+	switch (wifi_bt)
+	{
+	case 1:
+		// === WIFI ===
+		u8g2_DrawXBM(&u8g2, 15, 4, 8, 8, icon_wifi_bits);
+    
+		if (!status_ok) {
+			u8g2_DrawLine(&u8g2, 14, 4, 22, 12); 
+		}
+		break;
+	case 2: 
+		// === BLUETOOTH ===
+    	u8g2_DrawXBM(&u8g2, 2, 4, 8, 8, icon_bt_bits);
+		 if (!status_ok) {
+			u8g2_DrawLine(&u8g2, 2, 4, 10, 12); 
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 // Function for updating the OLED
 void update_oled(void)
 {
 #ifdef BATT_STAT
 	battery_percent = get_battery_level();
 #endif
+	
 
 	if (xQueueReceive(layer_recieve_q, &curr_layout, (TickType_t)0))
 	{
@@ -159,38 +206,6 @@ void update_oled(void)
 	}
 }
 
-static const unsigned char icon_bt_bits[] U8X8_PROGMEM = {
-    0x08, 0x18, 0x28, 0x4A, 0x3C, 0x4A, 0x28, 0x18
-};
-
-static const unsigned char icon_wifi_bits[] U8X8_PROGMEM = {
-    0x18, 0x42, 0x81, 0x00, 0x3C, 0x42, 0x00, 0x18
-};
-
-void oled_draw_status_bar(u8g2_t *u8g2, uint8_t wifi_bt, bool status_ok) 
-{
-	switch (wifi_bt)
-	{
-	case 1:
-		// === WIFI ===
-		u8g2_DrawXBM(u8g2, 15, 4, 8, 8, icon_wifi_bits);
-    
-		if (!status_ok) {
-			u8g2_DrawLine(u8g2, 14, 4, 22, 12); 
-		}
-		break;
-	case 2: 
-		// === BLUETOOTH ===
-    	u8g2_DrawXBM(u8g2, 2, 4, 8, 8, icon_bt_bits);
-		 if (!status_ok) {
-			u8g2_DrawLine(u8g2, 2, 4, 10, 12); 
-		}
-		break;
-	default:
-		break;
-	}
-}
-
 // oled on connection
 void ble_connected_oled(void)
 {
@@ -198,7 +213,7 @@ void ble_connected_oled(void)
 	dd_layer_lst_t dd_layer_lst = nvs_get_layer_lst();
 	u8g2_ClearBuffer(&u8g2);
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	oled_draw_status_bar(&u8g2, 2, true);
+	oled_draw_status_bar(2, true);
 	// u8g2_DrawStr(&u8g2, 0, 6, GATTS_TAG);
 
 	// u8g2_DrawStr(&u8g2, 0, 14, layer_names_arr[current_layout]);
@@ -263,12 +278,11 @@ void wifi_connected_oled(char *ip_char)
 	strncpy(current_ip, ip_char, sizeof(current_ip) - 1);
     current_ip[sizeof(current_ip) - 1] = '\0';
 
-	char texto_pantalla[32]; 
-    snprintf(texto_pantalla, sizeof(texto_pantalla), "%s.local", ip_char);
+	char screen_text[32]; 
+    snprintf(screen_text, sizeof(screen_text), "%s.local", ip_char);
 
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	u8g2_DrawStr(&u8g2, 35 + offset_x_batt, 8 + offset_y_batt, texto_pantalla);
-	oled_draw_status_bar(&u8g2, 1, true);
+	u8g2_DrawStr(&u8g2, 35 + offset_x_batt, 8 + offset_y_batt, screen_text);
 	u8g2_SendBuffer(&u8g2);
 	
 }
@@ -288,8 +302,7 @@ void waiting_oled(void)
 	// u8g2_DrawGlyph(&u8g2, 110 + offset_x_batt, 8 + offset_y_batt, BATT_ICON);
 	// u8g2_DrawGlyph(&u8g2, 120 + offset_x_batt, 8 + offset_y_batt, BT_ICON);
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	oled_draw_status_bar(&u8g2, 1, false);
-	oled_draw_status_bar(&u8g2, 2, false);
+	oled_draw_status_bar(2, false);
 	// u8g2_DrawStr(&u8g2, 0, 6, GATTS_TAG);
 
 	// char buf[sizeof(uint32_t)];
