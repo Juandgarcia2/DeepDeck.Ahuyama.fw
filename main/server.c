@@ -26,6 +26,7 @@
 // #include "mdns.h"
 #include "esp_vfs.h"
 #include "server_nvs.h"
+#include "esp_wifi.h"
 
 #include "keypress_handles.h"
 
@@ -2831,30 +2832,36 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
 
 	char filepath[FILE_PATH_MAX];
 
-	char host[64];
-    if (httpd_req_get_hdr_value_str(req, "Host", host, sizeof(host)) == ESP_OK) {
-        // Si el Host NO es la IP de nuestro ESP32 (192.168.4.1)...
-        if (strstr(host, "192.168.4.1") == NULL) {
-            ESP_LOGI(REST_TAG, "Redirigiendo Captive Portal. Host solicitado: %s", host);
-            httpd_resp_set_status(req, "302 Found");
-            httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
-			httpd_resp_set_hdr(req, "Connection", "close");
-            return httpd_resp_send(req, NULL, 0);
-        }
-    }
+	wifi_mode_t wifi_mode;
+    if (esp_wifi_get_mode(&wifi_mode) == ESP_OK) {
 
-    // 2. Detectar si el cliente busca rutas clásicas de testeo de internet
-    if (strstr(req->uri, "/generate_204") != NULL || 
-        strstr(req->uri, "/hotspot-detect.html") != NULL || 
-        strstr(req->uri, "/ncsi.txt") != NULL ||
-        strstr(req->uri, "/canonical.html") != NULL) {
-        
-        ESP_LOGI(REST_TAG, "Interceptada ruta de portal cautivo: %s", req->uri);
-        httpd_resp_set_status(req, "302 Found");
-        httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
-		httpd_resp_set_hdr(req, "Connection", "close");
-        return httpd_resp_send(req, NULL, 0);
-    }
+		if (wifi_mode == WIFI_MODE_AP || wifi_mode == WIFI_MODE_APSTA)
+		{
+			char host[64];
+			if (httpd_req_get_hdr_value_str(req, "Host", host, sizeof(host)) == ESP_OK) {
+				if (strstr(host, "192.168.4.1") == NULL) {
+					ESP_LOGI(REST_TAG, "Redirigiendo Captive Portal. Host solicitado: %s", host);
+					httpd_resp_set_status(req, "302 Found");
+					httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
+					httpd_resp_set_hdr(req, "Connection", "close");
+					return httpd_resp_send(req, NULL, 0);
+				}
+			}
+
+			// 2. Detectar si el cliente busca rutas clásicas de testeo de internet
+			if (strstr(req->uri, "/generate_204") != NULL || 
+				strstr(req->uri, "/hotspot-detect.html") != NULL || 
+				strstr(req->uri, "/ncsi.txt") != NULL ||
+				strstr(req->uri, "/canonical.html") != NULL) {
+				
+				ESP_LOGI(REST_TAG, "Interceptada ruta de portal cautivo: %s", req->uri);
+				httpd_resp_set_status(req, "302 Found");
+				httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
+				httpd_resp_set_hdr(req, "Connection", "close");
+				return httpd_resp_send(req, NULL, 0);
+			}
+		}
+	}
 
 	rest_server_context_t *rest_context = (rest_server_context_t *)req->user_ctx;
 	strlcpy(filepath, rest_context->base_path, sizeof(filepath));
