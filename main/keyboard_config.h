@@ -58,7 +58,7 @@
 #define WIFI_ENABLE
 
 // MDNS. Comment to disable
-// #define USE_MDNS
+#define USE_MDNS
 
 // OLED Parameters
 #define OLED_ENABLE // undefine if no oled is used.

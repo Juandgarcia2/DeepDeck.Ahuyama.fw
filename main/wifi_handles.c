@@ -463,14 +463,13 @@ void wifiInit(void *params)
 
 		nvs_close(nvs);
 
-		#ifdef USE_MDNS
-			initialise_mdns();
-		#endif
-
 		if (ssid != NULL && pass != NULL)
 		{
 			// connectSTA(ssid, pass);
 			wifi_init_sta(wifi_ap_mode, ssid, pass);
+			#ifdef USE_MDNS
+				initialise_mdns();
+			#endif
 		}
 		else
 		{

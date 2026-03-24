@@ -81,6 +81,7 @@
 #include "keys.h"
 #include "server_nvs.h"
 
+
 // plugin functions
 static config_data_t config;
 
