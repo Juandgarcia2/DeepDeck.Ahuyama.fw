@@ -2831,6 +2831,31 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
 
 	char filepath[FILE_PATH_MAX];
 
+	char host[64];
+    if (httpd_req_get_hdr_value_str(req, "Host", host, sizeof(host)) == ESP_OK) {
+        // Si el Host NO es la IP de nuestro ESP32 (192.168.4.1)...
+        if (strstr(host, "192.168.4.1") == NULL) {
+            ESP_LOGI(REST_TAG, "Redirigiendo Captive Portal. Host solicitado: %s", host);
+            httpd_resp_set_status(req, "302 Found");
+            httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
+			httpd_resp_set_hdr(req, "Connection", "close");
+            return httpd_resp_send(req, NULL, 0);
+        }
+    }
+
+    // 2. Detectar si el cliente busca rutas clásicas de testeo de internet
+    if (strstr(req->uri, "/generate_204") != NULL || 
+        strstr(req->uri, "/hotspot-detect.html") != NULL || 
+        strstr(req->uri, "/ncsi.txt") != NULL ||
+        strstr(req->uri, "/canonical.html") != NULL) {
+        
+        ESP_LOGI(REST_TAG, "Interceptada ruta de portal cautivo: %s", req->uri);
+        httpd_resp_set_status(req, "302 Found");
+        httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
+		httpd_resp_set_hdr(req, "Connection", "close");
+        return httpd_resp_send(req, NULL, 0);
+    }
+
 	rest_server_context_t *rest_context = (rest_server_context_t *)req->user_ctx;
 	strlcpy(filepath, rest_context->base_path, sizeof(filepath));
 
@@ -2912,6 +2937,8 @@ httpd_handle_t start_webserver(const char *base_path)
 	config.max_uri_handlers = 50;
 	config.stack_size = 1024 * 14; // TODO: verify if its the correct size.
 	config.uri_match_fn = httpd_uri_match_wildcard;
+	config.max_open_sockets = 12;
+	config.lru_purge_enable = true;
 
 	// Start the httpd server
 	// ESP_ERROR_CHECK(httpd_start(&server, &config));
