@@ -159,6 +159,38 @@ void update_oled(void)
 	}
 }
 
+static const unsigned char icon_bt_bits[] U8X8_PROGMEM = {
+    0x08, 0x18, 0x28, 0x4A, 0x3C, 0x4A, 0x28, 0x18
+};
+
+static const unsigned char icon_wifi_bits[] U8X8_PROGMEM = {
+    0x18, 0x42, 0x81, 0x00, 0x3C, 0x42, 0x00, 0x18
+};
+
+void oled_draw_status_bar(u8g2_t *u8g2, uint8_t wifi_bt, bool status_ok) 
+{
+	switch (wifi_bt)
+	{
+	case 1:
+		// === WIFI ===
+		u8g2_DrawXBM(u8g2, 15, 4, 8, 8, icon_wifi_bits);
+    
+		if (!status_ok) {
+			u8g2_DrawLine(u8g2, 14, 4, 22, 12); 
+		}
+		break;
+	case 2: 
+		// === BLUETOOTH ===
+    	u8g2_DrawXBM(u8g2, 2, 4, 8, 8, icon_bt_bits);
+		 if (!status_ok) {
+			u8g2_DrawLine(u8g2, 2, 4, 10, 12); 
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 // oled on connection
 void ble_connected_oled(void)
 {
@@ -166,7 +198,8 @@ void ble_connected_oled(void)
 	dd_layer_lst_t dd_layer_lst = nvs_get_layer_lst();
 	u8g2_ClearBuffer(&u8g2);
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	u8g2_DrawStr(&u8g2, 0, 6, GATTS_TAG);
+	oled_draw_status_bar(&u8g2, 2, true);
+	// u8g2_DrawStr(&u8g2, 0, 6, GATTS_TAG);
 
 	// u8g2_DrawStr(&u8g2, 0, 14, layer_names_arr[current_layout]);
 	// u8g2_SetFont(&u8g2, u8g2_font_open_iconic_all_1x_t);
@@ -174,8 +207,8 @@ void ble_connected_oled(void)
 	// u8g2_DrawGlyph(&u8g2, 120 + offset_x_batt, 8 + offset_y_batt, BT_ICON);
 
 	// Print Wifi status
-	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	u8g2_DrawStr(&u8g2, 40 + offset_x_batt, 8 + offset_y_batt, current_ip);
+	// u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
+	// u8g2_DrawStr(&u8g2, 40 + offset_x_batt, 8 + offset_y_batt, current_ip);
 
 	u8g2_SetFont(&u8g2, u8g2_font_courB18_tf);
 	u8g2_DrawStr(&u8g2, 0, 33, dd_layer_lst.item[curr_layout].name);
@@ -209,29 +242,35 @@ void ble_connected_oled(void)
 	//		u8g2_DrawGlyph(&u8g2,88,32,LOCK_ICON);
 	//	}
 
-	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	char buf[sizeof(uint32_t)];
-	snprintf(buf, sizeof(uint32_t), "%lu", battery_percent);
-	u8g2_DrawStr(&u8g2, +offset_x_batt, +offset_y_batt, "%");
-	if (battery_percent < 100)
-	{
-		u8g2_DrawStr(&u8g2, +offset_x_batt, 7 + offset_y_batt, buf);
-	}
-	else
-	{
-		u8g2_DrawStr(&u8g2, 85 + offset_x_batt, 7 + offset_y_batt, "100");
-	}
+	// u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
+	// char buf[sizeof(uint32_t)];
+	// snprintf(buf, sizeof(uint32_t), "%lu", battery_percent);
+	// u8g2_DrawStr(&u8g2, +offset_x_batt, +offset_y_batt, "%");
+	// if (battery_percent < 100)
+	// {
+	// 	u8g2_DrawStr(&u8g2, +offset_x_batt, 7 + offset_y_batt, buf);
+	// }
+	// else
+	// {
+	// 	u8g2_DrawStr(&u8g2, 85 + offset_x_batt, 7 + offset_y_batt, "100");
+	// }
 	u8g2_SendBuffer(&u8g2);
 }
 
-void wifi_connected_oled(char *ip_char)
+void wifi_connected_oled(char *ip_char) 
 {
 	// u8g2_ClearBuffer(&u8g2);
-	strcpy(current_ip, ip_char);
+	strncpy(current_ip, ip_char, sizeof(current_ip) - 1);
+    current_ip[sizeof(current_ip) - 1] = '\0';
+
+	char texto_pantalla[32]; 
+    snprintf(texto_pantalla, sizeof(texto_pantalla), "%s.local", ip_char);
 
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	u8g2_DrawStr(&u8g2, 40 + offset_x_batt, 8 + offset_y_batt, ip_char);
-	// u8g2_SendBuffer(&u8g2); ------> This makes system crash if bluetooth is not connected at the beginning of the system
+	u8g2_DrawStr(&u8g2, 35 + offset_x_batt, 8 + offset_y_batt, texto_pantalla);
+	oled_draw_status_bar(&u8g2, 1, true);
+	u8g2_SendBuffer(&u8g2);
+	
 }
 
 // Waiting for connecting animation
@@ -249,7 +288,9 @@ void waiting_oled(void)
 	// u8g2_DrawGlyph(&u8g2, 110 + offset_x_batt, 8 + offset_y_batt, BATT_ICON);
 	// u8g2_DrawGlyph(&u8g2, 120 + offset_x_batt, 8 + offset_y_batt, BT_ICON);
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	u8g2_DrawStr(&u8g2, 0, 6, GATTS_TAG);
+	oled_draw_status_bar(&u8g2, 1, false);
+	oled_draw_status_bar(&u8g2, 2, false);
+	// u8g2_DrawStr(&u8g2, 0, 6, GATTS_TAG);
 
 	// char buf[sizeof(uint32_t)];
 	// snprintf(buf, sizeof(uint32_t), "%d", battery_percent);
@@ -287,7 +328,7 @@ void deinit_oled(void)
 
 	u8g2_ClearBuffer(&u8g2);
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	u8g2_DrawStr(&u8g2, 0, 6, GATTS_TAG);
+	// u8g2_DrawStr(&u8g2, 0, 6, GATTS_TAG);
 	u8g2_DrawStr(&u8g2, 0, 26, "Going to sleep!");
 	u8g2_SendBuffer(&u8g2);
 	vTaskDelay(1000 / portTICK_PERIOD_MS);
