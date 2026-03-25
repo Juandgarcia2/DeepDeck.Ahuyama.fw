@@ -121,7 +121,7 @@ menu_item_t m_brightness_array[] =
 // };
 
 // ------------------LED modes -------------------------------
-char menu_led_mode[7][MENU_CHAR_NUM] =
+char menu_led_mode[8][MENU_CHAR_NUM] =
     {
         "Off",
         "Pulsating",
@@ -129,7 +129,8 @@ char menu_led_mode[7][MENU_CHAR_NUM] =
         "Sparks",
         "Solid",
         "Fireball",
-        "Rainbow",};
+        "Rainbow",
+        "Custom colors"};
 menu_item_t m_led_array[] =
     {
         // Descripción                 //Acción             //Siguiente menu      ó     //Función
@@ -140,6 +141,7 @@ menu_item_t m_led_array[] =
         {menu_led_mode[4], MA_FUNCTION, NONE, &menu_rgb_mode_4},
         {menu_led_mode[5], MA_FUNCTION, NONE, &menu_rgb_mode_6},
         {menu_led_mode[6], MA_FUNCTION, NONE, &menu_rgb_mode_7},
+        {menu_led_mode[7], MA_FUNCTION, NONE, &menu_rgb_mode_8},
         {0, MA_END, 0, 0}};
 
 // ----------------------------------- Menu Array ------------------------------------------
@@ -591,6 +593,11 @@ uint8_t menu_rgb_mode_6(void)
 uint8_t menu_rgb_mode_7(void)
 {
   return menu_send_rgb_mode(7);
+}
+
+uint8_t menu_rgb_mode_8(void)
+{
+  return menu_send_rgb_mode(8);
 }
 
 

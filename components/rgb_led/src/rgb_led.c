@@ -220,8 +220,37 @@ void key_led_modes(void)
                         if (dd_layer_lst.item[current_layout].key_map[index][index_col] != 0)
                         {
                             // Write RGB values to strip driver
-                            // ESP_LOGE(TAG, "led = %d on {%d, %d, %d}", dumy, led_mode.rgb[0], led_mode.rgb[1], led_mode.rgb[2]);
+                            // ESP_LOGE(TAG, "led = %d on {%d, %d, %d}", dumy, led_mode.rgb[0], led_mode.rgb[1], led_mode.rgb[2]); 
                             ESP_ERROR_CHECK(rgb_key->set_pixel(rgb_key, dumy, led_mode.rgb[0], led_mode.rgb[1], led_mode.rgb[2]));
+                        }
+
+                        else
+                        {
+                            // ESP_LOGE(TAG, "led  = %d off", dumy);
+                            ESP_ERROR_CHECK(rgb_key->set_pixel(rgb_key, dumy, 0, 0, 0));
+                        }
+                        dumy++;
+                    }
+                }
+                // Flush RGB values to LEDs
+                ESP_ERROR_CHECK(rgb_key->refresh(rgb_key, 100));
+            }
+
+            if (modes == 8) // Layer based RGB, each layer has its own RGB values, when the layer is active, the RGB values will be applied to the keyboard, otherwise, the keyboard will be off
+            {
+                dumy = 0;
+                dd_layer_lst_t dd_layer_lst = nvs_get_layer_lst();
+                for (int index = 0; index < MATRIX_ROWS; ++index)
+                {
+                    for (int index_col = 0; index_col < MATRIX_COLS; index_col++)
+                    {
+
+                        if (dd_layer_lst.item[current_layout].key_map[index][index_col] != 0)
+                        {
+                            // Write RGB values to strip driver
+                            // ESP_LOGE(TAG, "led = %d on {%d, %d, %d}", dumy, led_mode.rgb[0], led_mode.rgb[1], led_mode.rgb[2]);
+                            ESP_ERROR_CHECK(rgb_key->set_pixel(rgb_key, dumy, dd_layer_lst.item[current_layout].key_map_colors[index][index_col].r, 
+                                    dd_layer_lst.item[current_layout].key_map_colors[index][index_col].g, dd_layer_lst.item[current_layout].key_map_colors[index][index_col].b));
                         }
 
                         else
