@@ -2244,7 +2244,7 @@ esp_err_t options_restore_handler(httpd_req_t *req)
 	return ESP_OK;
 }
 
-void fill_row(cJSON *row, char names[][10], int codes[])
+void fill_row(cJSON *row, char names[][10], int codes[], dd_key_color_t colors[])
 {
 	int i;
 	cJSON *item;
@@ -2257,6 +2257,20 @@ void fill_row(cJSON *row, char names[][10], int codes[])
 			strcpy(names[i], "__");
 
 		codes[i] = cJSON_GetObjectItem(item, "key_code")->valueint;
+
+		cJSON *rgb_array = cJSON_GetObjectItem(item, "rgb");
+        
+        // Verificamos que el campo "rgb" exista y tenga exactamente 3 elementos
+        if (cJSON_IsArray(rgb_array) && cJSON_GetArraySize(rgb_array) == 3) {
+            colors[i].r = cJSON_GetArrayItem(rgb_array, 0)->valueint;
+            colors[i].g = cJSON_GetArrayItem(rgb_array, 1)->valueint;
+            colors[i].b = cJSON_GetArrayItem(rgb_array, 2)->valueint;
+        } else {
+            // Valor por defecto (apagado) si el JSON no trae el color
+            colors[i].r = 0;
+            colors[i].g = 0;
+            colors[i].b = 0;
+        }
 	}
 }
 
@@ -2289,6 +2303,7 @@ esp_err_t update_layer_url_handler(httpd_req_t *req)
 	httpd_req_recv(req, buf, req->content_len);
 
 	cJSON *payload = cJSON_Parse(buf);
+	ESP_LOGE(TAG, "Json payload %s", payload ? cJSON_Print(payload) : "Failed to parse");
 	dd_layer temp_layout;
 
 	if (NULL == payload)
@@ -2328,11 +2343,12 @@ esp_err_t update_layer_url_handler(httpd_req_t *req)
 
 	char names[ROWS][COLS][10];
 	int codes[ROWS][COLS];
+	dd_key_color_t colors[ROWS][COLS];
 
-	fill_row(row0, names[0], codes[0]);
-	fill_row(row1, names[1], codes[1]);
-	fill_row(row2, names[2], codes[2]);
-	fill_row(row3, names[3], codes[3]);
+	fill_row(row0, names[0], codes[0], colors[0]);
+	fill_row(row1, names[1], codes[1], colors[1]);
+	fill_row(row2, names[2], codes[2], colors[2]);
+	fill_row(row3, names[3], codes[3], colors[3]);
 
 	int i, j;
 	for (i = 0; i < ROWS; i++)
@@ -2347,6 +2363,7 @@ esp_err_t update_layer_url_handler(httpd_req_t *req)
 		for (j = 0; j < COLS; j++)
 		{
 			temp_layout.key_map[i][j] = codes[i][j];
+			temp_layout.key_map_colors[i][j] = colors[i][j];
 		}
 	}
 
@@ -2509,11 +2526,12 @@ esp_err_t create_layer_url_handler(httpd_req_t *req)
 
 	char names[ROWS][COLS][10];
 	int codes[ROWS][COLS];
+	dd_key_color_t colors[ROWS][COLS];
 
-	fill_row(row0, names[0], codes[0]);
-	fill_row(row1, names[1], codes[1]);
-	fill_row(row2, names[2], codes[2]);
-	fill_row(row3, names[3], codes[3]);
+	fill_row(row0, names[0], codes[0], colors[0]);
+	fill_row(row1, names[1], codes[1], colors[1]);
+	fill_row(row2, names[2], codes[2], colors[2]);
+	fill_row(row3, names[3], codes[3], colors[3]);
 
 	int i, j;
 	for (i = 0; i < ROWS; i++)
@@ -2529,6 +2547,7 @@ esp_err_t create_layer_url_handler(httpd_req_t *req)
 		for (j = 0; j < COLS; j++)
 		{
 			new_layer.key_map[i][j] = codes[i][j];
+			new_layer.key_map_colors[i][j] = colors[i][j];
 		}
 	}
 

@@ -75,7 +75,7 @@ typedef struct dd_layer_str
 	bool active;
 	char uuid_str[SHORT_UUID_STR_LEN];
 	dd_key_color_t key_map_colors[MATRIX_ROWS][MATRIX_COLS];	// Key colors
-	
+
 } dd_layer;
 
 /**
