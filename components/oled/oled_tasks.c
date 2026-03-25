@@ -50,12 +50,11 @@ QueueHandle_t layer_recieve_q;
 QueueHandle_t led_recieve_q;
 
 uint32_t battery_percent = 0;
-uint32_t prev_battery_percent = 0;
+uint32_t prev_battery_percent = 999;
 
 uint8_t curr_layout = 0;
 uint8_t current_led = 0;
 
-int BATT_FLAG = 0;
 int DROP_H = 0;
 
 int offset_x_batt = 0;
@@ -64,7 +63,7 @@ int offset_y_batt = 0;
 char current_ip[16] = "...";
 
 #define BT_ICON 0x5e
-#define BATT_ICON 0x5b
+#define BATT_ICON 0x40
 #define LOCK_ICON 0xca
 
 // Erasing area from oled
@@ -85,16 +84,6 @@ static const unsigned char icon_wifi_bits[] U8X8_PROGMEM = {
     0x18, 0x42, 0x81, 0x00, 0x3C, 0x42, 0x00, 0x18
 };
 
-// bool is_connected_to_router(void) {
-//     wifi_ap_record_t ap_info;
-//     esp_err_t err = esp_wifi_sta_get_ap_info(&ap_info);
-    
-//     if (err == ESP_OK) {
-//         return true; 
-//     } else {
-//         return false; // Desconectado o en modo AP
-//     }
-// }
 
 void oled_draw_status_bar(uint8_t wifi_bt, bool status_ok) 
 {
@@ -120,11 +109,47 @@ void oled_draw_status_bar(uint8_t wifi_bt, bool status_ok)
 	}
 }
 
+void draw_battery_status(uint32_t battery_percent) 
+{
+	if (battery_percent != prev_battery_percent)
+	{
+		char batt_text[10];
+        snprintf(batt_text, sizeof(batt_text), "%lu", battery_percent);
+
+		u8g2_SetFont(&u8g2, u8g2_font_open_iconic_embedded_1x_t);
+		u8g2_DrawGlyph(&u8g2, 97 + offset_x_batt, 9 + offset_y_batt, BATT_ICON);
+
+		u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
+		char buf[sizeof(uint32_t)];
+		snprintf(buf, sizeof(uint32_t), "%lu", battery_percent);
+		u8g2_DrawStr(&u8g2, 120 + offset_x_batt, 8 + offset_y_batt, "%");
+
+		if ((battery_percent < 100) && (abs((int)battery_percent - (int)prev_battery_percent) >= 2))
+		{
+			erase_area(108 + offset_x_batt, 0 + offset_y_batt, 12, 8);
+			u8g2_DrawStr(&u8g2, 108 + offset_x_batt, 8 + offset_y_batt, batt_text);
+			u8g2_SendBuffer(&u8g2);
+		}
+		else if (battery_percent >= 100)
+		{
+			erase_area(108 + offset_x_batt, 0 + offset_y_batt, 12, 8);
+			u8g2_DrawStr(&u8g2, 108 + offset_x_batt, 8 + offset_y_batt, "99");
+			u8g2_SendBuffer(&u8g2);
+		}
+
+		prev_battery_percent = battery_percent;
+		
+	}
+
+	
+}
+
 // Function for updating the OLED
 void update_oled(void)
 {
 #ifdef BATT_STAT
 	battery_percent = get_battery_level();
+	draw_battery_status(battery_percent);
 #endif
 	
 
@@ -175,34 +200,6 @@ void update_oled(void)
 			u8g2_DrawGlyph(&u8g2, 88, 32, LOCK_ICON);
 		}
 		u8g2_SendBuffer(&u8g2);
-	}
-
-	if (battery_percent != prev_battery_percent)
-	{
-		u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-		char buf[sizeof(uint32_t)];
-		snprintf(buf, sizeof(uint32_t), "%lu", battery_percent);
-		u8g2_DrawStr(&u8g2, 103 + offset_x_batt, 7 + offset_y_batt, "%");
-		if ((battery_percent < 100) && (abs((int)battery_percent - (int)prev_battery_percent) >= 2))
-		{
-			erase_area(85 + offset_x_batt, 0 + offset_y_batt, 15, 7);
-			u8g2_DrawStr(&u8g2, 90 + offset_x_batt, 7 + offset_y_batt, buf);
-			u8g2_SendBuffer(&u8g2);
-		}
-		if ((battery_percent > 100) && (BATT_FLAG = 0))
-		{
-			erase_area(85 + offset_x_batt, 0 + offset_y_batt, 15, 7);
-			u8g2_DrawStr(&u8g2, 85 + offset_x_batt, 7 + offset_y_batt, "100");
-			BATT_FLAG = 1;
-			u8g2_SendBuffer(&u8g2);
-		}
-		if (battery_percent == 100)
-		{
-			erase_area(85 + offset_x_batt, 0 + offset_y_batt, 15, 7);
-			u8g2_DrawStr(&u8g2, 85 + offset_x_batt, 7 + offset_y_batt, "100");
-			u8g2_SendBuffer(&u8g2);
-		}
-		prev_battery_percent = battery_percent;
 	}
 }
 
@@ -282,7 +279,7 @@ void wifi_connected_oled(char *ip_char)
     snprintf(screen_text, sizeof(screen_text), "%s.local", ip_char);
 
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	u8g2_DrawStr(&u8g2, 35 + offset_x_batt, 8 + offset_y_batt, screen_text);
+	u8g2_DrawStr(&u8g2, 28 + offset_x_batt, 8 + offset_y_batt, screen_text);
 	oled_draw_status_bar(1, true);
 	u8g2_SendBuffer(&u8g2);
 	
@@ -296,6 +293,7 @@ void waiting_oled(void)
 
 #ifdef BATT_STAT
 	battery_percent = get_battery_level();
+	draw_battery_status(battery_percent);
 #endif
 
 	u8g2_ClearBuffer(&u8g2);

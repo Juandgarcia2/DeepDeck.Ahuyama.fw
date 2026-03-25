@@ -52,6 +52,10 @@ uint32_t get_battery_level(void) {
 	uint32_t adc_reading = 0;
 	//Multisampling
 
+	if (adc_chars == NULL) { 
+        return 0; 
+    }
+
 	for (int i = 0; i < NO_OF_SAMPLES; i++) {
 		adc_reading += adc1_get_raw((adc1_channel_t) channel);
 	}
@@ -59,8 +63,17 @@ uint32_t get_battery_level(void) {
 
 	//Convert adc_reading to voltage in mV
 	voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-	uint32_t battery_percent = ((voltage - Vout_min) * 100
-			/ (Vout_max - Vout_min));
+
+	uint32_t battery_percent = 0;
+	if (voltage <= Vout_min) {
+        battery_percent = 0;
+    } 
+    else if (voltage >= Vout_max) {
+        battery_percent = 100;
+    } 
+    else {
+        battery_percent = ((voltage - Vout_min) * 100) / (Vout_max - Vout_min);
+    }
 //    printf("Raw: %d\tVoltage: %dmV\tPercent: %d\n", adc_reading, voltage, battery_percent);
 	return battery_percent;
 
