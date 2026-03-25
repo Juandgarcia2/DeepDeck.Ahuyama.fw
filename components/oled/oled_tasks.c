@@ -283,6 +283,7 @@ void wifi_connected_oled(char *ip_char)
 
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
 	u8g2_DrawStr(&u8g2, 35 + offset_x_batt, 8 + offset_y_batt, screen_text);
+	oled_draw_status_bar(1, true);
 	u8g2_SendBuffer(&u8g2);
 	
 }

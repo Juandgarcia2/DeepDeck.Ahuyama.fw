@@ -178,7 +178,6 @@ void event_handler(void *arg, esp_event_base_t event_base,
 		char ip_char[16] = {0}; // 16 es el tamaño máximo de una dirección IP
 		sprintf(ip_char, "%d.%d.%d.%d", esp_ip4_addr1_16(&event->ip_info.ip), esp_ip4_addr2_16(&event->ip_info.ip), esp_ip4_addr3_16(&event->ip_info.ip), esp_ip4_addr4_16(&event->ip_info.ip));
 
-		oled_draw_status_bar(1, true);
 		wifi_connected_oled(MDNS_HOST_NAME);
 		s_retry_num = 0;
 		xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
