@@ -122,18 +122,18 @@ void draw_battery_status(uint32_t battery_percent)
 		u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
 		char buf[sizeof(uint32_t)];
 		snprintf(buf, sizeof(uint32_t), "%lu", battery_percent);
-		u8g2_DrawStr(&u8g2, 120 + offset_x_batt, 8 + offset_y_batt, "%");
+		u8g2_DrawUTF8(&u8g2, 120 + offset_x_batt, 8 + offset_y_batt, "%");
 
 		if ((battery_percent < 100) && (abs((int)battery_percent - (int)prev_battery_percent) >= 2))
 		{
 			erase_area(108 + offset_x_batt, 0 + offset_y_batt, 12, 8);
-			u8g2_DrawStr(&u8g2, 108 + offset_x_batt, 8 + offset_y_batt, batt_text);
+			u8g2_DrawUTF8(&u8g2, 108 + offset_x_batt, 8 + offset_y_batt, batt_text);
 			u8g2_SendBuffer(&u8g2);
 		}
 		else if (battery_percent >= 100)
 		{
 			erase_area(108 + offset_x_batt, 0 + offset_y_batt, 12, 8);
-			u8g2_DrawStr(&u8g2, 108 + offset_x_batt, 8 + offset_y_batt, "99");
+			u8g2_DrawUTF8(&u8g2, 108 + offset_x_batt, 8 + offset_y_batt, "99");
 			u8g2_SendBuffer(&u8g2);
 		}
 
@@ -160,7 +160,7 @@ void update_oled(void)
 		u8g2_SetFont(&u8g2, u8g2_font_courB18_tf);
 
 		dd_layer_lst_t dd_layer_lst = nvs_get_layer_lst();
-		u8g2_DrawStr(&u8g2, 0, 33, dd_layer_lst.item[curr_layout].name);
+		u8g2_DrawUTF8(&u8g2, 0, 33, dd_layer_lst.item[curr_layout].name);
 
 		erase_area(0, 35, 128, 29);
 		u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
@@ -168,7 +168,7 @@ void update_oled(void)
 		{
 			for (int j = 0; j < MATRIX_ROWS; j++)
 			{
-				u8g2_DrawStr(&u8g2, j * 32, 42 + i * 7, dd_layer_lst.item[curr_layout].key_map_names[i][j]);
+				u8g2_DrawUTF8(&u8g2, j * 32, 42 + i * 7, dd_layer_lst.item[curr_layout].key_map_names[i][j]);
 			}
 		}
 
@@ -180,7 +180,7 @@ void update_oled(void)
 		if (CHECK_BIT(current_led, 0) != 0)
 		{
 			u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-			u8g2_DrawStr(&u8g2, 0, 31, "NUM");
+			u8g2_DrawUTF8(&u8g2, 0, 31, "NUM");
 			u8g2_SetFont(&u8g2, u8g2_font_open_iconic_all_1x_t);
 			u8g2_DrawGlyph(&u8g2, 16, 32, LOCK_ICON);
 		}
@@ -188,14 +188,14 @@ void update_oled(void)
 		if (CHECK_BIT(current_led, 1) != 0)
 		{
 			u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-			u8g2_DrawStr(&u8g2, 27, 31, "CAPS");
+			u8g2_DrawUTF8(&u8g2, 27, 31, "CAPS");
 			u8g2_SetFont(&u8g2, u8g2_font_open_iconic_all_1x_t);
 			u8g2_DrawGlyph(&u8g2, 48, 32, LOCK_ICON);
 		}
 		if (CHECK_BIT(current_led, 2) != 0)
 		{
 			u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-			u8g2_DrawStr(&u8g2, 57, 31, "SCROLL");
+			u8g2_DrawUTF8(&u8g2, 57, 31, "SCROLL");
 			u8g2_SetFont(&u8g2, u8g2_font_open_iconic_all_1x_t);
 			u8g2_DrawGlyph(&u8g2, 88, 32, LOCK_ICON);
 		}
@@ -211,45 +211,45 @@ void ble_connected_oled(void)
 	u8g2_ClearBuffer(&u8g2);
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
 	oled_draw_status_bar(2, true);
-	// u8g2_DrawStr(&u8g2, 0, 6, GATTS_TAG);
+	// u8g2_DrawUTF8(&u8g2, 0, 6, GATTS_TAG);
 
-	// u8g2_DrawStr(&u8g2, 0, 14, layer_names_arr[current_layout]);
+	// u8g2_DrawUTF8(&u8g2, 0, 14, layer_names_arr[current_layout]);
 	// u8g2_SetFont(&u8g2, u8g2_font_open_iconic_all_1x_t);
 	// u8g2_DrawGlyph(&u8g2, 110 + offset_x_batt, 8 + offset_y_batt, BATT_ICON);
 	// u8g2_DrawGlyph(&u8g2, 120 + offset_x_batt, 8 + offset_y_batt, BT_ICON);
 
 	// Print Wifi status
 	// u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	// u8g2_DrawStr(&u8g2, 40 + offset_x_batt, 8 + offset_y_batt, current_ip);
+	// u8g2_DrawUTF8(&u8g2, 40 + offset_x_batt, 8 + offset_y_batt, current_ip);
 
 	u8g2_SetFont(&u8g2, u8g2_font_courB18_tf);
-	u8g2_DrawStr(&u8g2, 0, 33, dd_layer_lst.item[curr_layout].name);
+	u8g2_DrawUTF8(&u8g2, 0, 33, dd_layer_lst.item[curr_layout].name);
 
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
 	for (int i = 0; i < MATRIX_COLS; i++)
 	{
 		for (int j = 0; j < MATRIX_ROWS; j++)
 		{
-			u8g2_DrawStr(&u8g2, j * 32, 42 + i * 7, dd_layer_lst.item[curr_layout].key_map_names[i][j]);
+			u8g2_DrawUTF8(&u8g2, j * 32, 42 + i * 7, dd_layer_lst.item[curr_layout].key_map_names[i][j]);
 		}
 	}
 
 	//	if(CHECK_BIT(curr_led,0)!=0){
 	//		u8g2_SetFont(&u8g2, u8g2_font_5x7_tf );
-	//		u8g2_DrawStr(&u8g2, 0,31,"NUM");
+	//		u8g2_DrawUTF8(&u8g2, 0,31,"NUM");
 	//		u8g2_SetFont(&u8g2, u8g2_font_open_iconic_all_1x_t );
 	//		u8g2_DrawGlyph(&u8g2, 16,32,LOCK_ICON);
 	//	}
 	//
 	//	if(CHECK_BIT(curr_led,1)!=0){
 	//		u8g2_SetFont(&u8g2, u8g2_font_5x7_tf );
-	//		u8g2_DrawStr(&u8g2, 27,31,"CAPS");
+	//		u8g2_DrawUTF8(&u8g2, 27,31,"CAPS");
 	//		u8g2_SetFont(&u8g2, u8g2_font_open_iconic_all_1x_t );
 	//		u8g2_DrawGlyph(&u8g2,48,32,LOCK_ICON);
 	//	}
 	//	if(CHECK_BIT(curr_led,2)!=0){
 	//		u8g2_SetFont(&u8g2, u8g2_font_5x7_tf );
-	//		u8g2_DrawStr(&u8g2, 57,31,"SCROLL");
+	//		u8g2_DrawUTF8(&u8g2, 57,31,"SCROLL");
 	//		u8g2_SetFont(&u8g2, u8g2_font_open_iconic_all_1x_t );
 	//		u8g2_DrawGlyph(&u8g2,88,32,LOCK_ICON);
 	//	}
@@ -257,14 +257,14 @@ void ble_connected_oled(void)
 	// u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
 	// char buf[sizeof(uint32_t)];
 	// snprintf(buf, sizeof(uint32_t), "%lu", battery_percent);
-	// u8g2_DrawStr(&u8g2, +offset_x_batt, +offset_y_batt, "%");
+	// u8g2_DrawUTF8(&u8g2, +offset_x_batt, +offset_y_batt, "%");
 	// if (battery_percent < 100)
 	// {
-	// 	u8g2_DrawStr(&u8g2, +offset_x_batt, 7 + offset_y_batt, buf);
+	// 	u8g2_DrawUTF8(&u8g2, +offset_x_batt, 7 + offset_y_batt, buf);
 	// }
 	// else
 	// {
-	// 	u8g2_DrawStr(&u8g2, 85 + offset_x_batt, 7 + offset_y_batt, "100");
+	// 	u8g2_DrawUTF8(&u8g2, 85 + offset_x_batt, 7 + offset_y_batt, "100");
 	// }
 	u8g2_SendBuffer(&u8g2);
 }
@@ -279,7 +279,7 @@ void wifi_connected_oled(char *ip_char)
     snprintf(screen_text, sizeof(screen_text), "%s.local", ip_char);
 
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	u8g2_DrawStr(&u8g2, 28 + offset_x_batt, 8 + offset_y_batt, screen_text);
+	u8g2_DrawUTF8(&u8g2, 28 + offset_x_batt, 8 + offset_y_batt, screen_text);
 	oled_draw_status_bar(1, true);
 	u8g2_SendBuffer(&u8g2);
 	
@@ -302,32 +302,32 @@ void waiting_oled(void)
 	// u8g2_DrawGlyph(&u8g2, 120 + offset_x_batt, 8 + offset_y_batt, BT_ICON);
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
 	oled_draw_status_bar(2, false);
-	// u8g2_DrawStr(&u8g2, 0, 6, GATTS_TAG);
+	// u8g2_DrawUTF8(&u8g2, 0, 6, GATTS_TAG);
 
 	// char buf[sizeof(uint32_t)];
 	// snprintf(buf, sizeof(uint32_t), "%d", battery_percent);
-	// u8g2_DrawStr(&u8g2, 103 + offset_x_batt, 7 + offset_y_batt, "%");
+	// u8g2_DrawUTF8(&u8g2, 103 + offset_x_batt, 7 + offset_y_batt, "%");
 	// if ((battery_percent < 100) && (battery_percent - prev_battery_percent >= 2))
 	// {
-	// 	u8g2_DrawStr(&u8g2, 90 + offset_x_batt, 7 + offset_y_batt, buf);
+	// 	u8g2_DrawUTF8(&u8g2, 90 + offset_x_batt, 7 + offset_y_batt, buf);
 	// }
 	// if (battery_percent < 100)
 	// {
-	// 	u8g2_DrawStr(&u8g2, 90 + offset_x_batt, 7 + offset_y_batt, buf);
+	// 	u8g2_DrawUTF8(&u8g2, 90 + offset_x_batt, 7 + offset_y_batt, buf);
 	// }
 	// else
 	// {
-	// 	u8g2_DrawStr(&u8g2, 85 + offset_x_batt, 7 + offset_y_batt, "100");
+	// 	u8g2_DrawUTF8(&u8g2, 85 + offset_x_batt, 7 + offset_y_batt, "100");
 	// }
 
-	u8g2_DrawStr(&u8g2, 0, 26, waiting);
-	u8g2_DrawStr(&u8g2, 0, 40, conn);
+	u8g2_DrawUTF8(&u8g2, 0, 26, waiting);
+	u8g2_DrawUTF8(&u8g2, 0, 40, conn);
 	u8g2_SendBuffer(&u8g2);
 
 	// for (int i = 0; i < 3; i++)
 	// {
-	// 	u8g2_DrawStr(&u8g2, 0, 26, waiting);
-	// 	u8g2_DrawStr(&u8g2, 0, 40, conn);
+	// 	u8g2_DrawUTF8(&u8g2, 0, 26, waiting);
+	// 	u8g2_DrawUTF8(&u8g2, 0, 40, conn);
 	// 	u8g2_SendBuffer(&u8g2);
 	// 	vTaskDelay(100 / portTICK_PERIOD_MS);
 	// 	strcat(conn, ".");
@@ -340,8 +340,8 @@ void deinit_oled(void)
 
 	u8g2_ClearBuffer(&u8g2);
 	u8g2_SetFont(&u8g2, u8g2_font_5x7_tf);
-	// u8g2_DrawStr(&u8g2, 0, 6, GATTS_TAG);
-	u8g2_DrawStr(&u8g2, 0, 26, "Going to sleep!");
+	// u8g2_DrawUTF8(&u8g2, 0, 6, GATTS_TAG);
+	u8g2_DrawUTF8(&u8g2, 0, 26, "Going to sleep!");
 	u8g2_SendBuffer(&u8g2);
 	vTaskDelay(1000 / portTICK_PERIOD_MS);
 	u8g2_ClearDisplay(&u8g2);
