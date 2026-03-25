@@ -39,7 +39,7 @@
 static const char *TAG = "KEY_PRESS";
 
 #define TRUNC_SIZE 20
-#define DEBUG_REPORT
+// #define DEBUG_REPORT
 
 /*
  * Current state of the keymap,each cell will hold the location of the key in the key report,
