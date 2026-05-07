@@ -61,83 +61,117 @@ uint8_t macro_release[3] = {0};
 uint8_t layer_hold_flag = 0;
 uint8_t prev_layout = 0;
 
-void escribir_cadena_hid(const char* str) {
-    uint8_t seq_report[REPORT_LEN] = {0};
+void enviar_tecla_segura(uint8_t mod, uint16_t key) {
+    uint8_t report[REPORT_LEN] = {0};
     
+    report[0] = mod;
+    report[2] = key;
+    xQueueSend(keyboard_q, report, 0);
+    vTaskDelay(pdMS_TO_TICKS(20)); 
+    
+    report[0] = 0;
+    report[2] = 0;
+    xQueueSend(keyboard_q, report, 0);
+    vTaskDelay(pdMS_TO_TICKS(20));
+}
+
+// Códigos Alt seguros para evitar problemas de idioma en Windows
+void escribir_alt_code(uint16_t num1, uint16_t num2) {
+    uint8_t report[REPORT_LEN] = {0};
+    
+    report[0] = 0x04; 
+    xQueueSend(keyboard_q, report, 0);
+    vTaskDelay(pdMS_TO_TICKS(20));
+    
+    report[2] = num1;
+    xQueueSend(keyboard_q, report, 0);
+    vTaskDelay(pdMS_TO_TICKS(20));
+    
+    report[2] = 0; 
+    xQueueSend(keyboard_q, report, 0);
+    vTaskDelay(pdMS_TO_TICKS(20));
+
+    report[2] = num2;
+    xQueueSend(keyboard_q, report, 0);
+    vTaskDelay(pdMS_TO_TICKS(20));
+    
+    report[0] = 0;
+    report[2] = 0;
+    xQueueSend(keyboard_q, report, 0);
+    vTaskDelay(pdMS_TO_TICKS(20));
+}
+
+// Traductor a HID
+void escribir_cadena_hid(const char* str) {
     for(int i = 0; i < strlen(str); i++) {
         char c = str[i];
+        
+        if (c == ':') { escribir_alt_code(KC_KP_5, KC_KP_8); continue; } 
+        if (c == '/') { escribir_alt_code(KC_KP_4, KC_KP_7); continue; } 
+        if (c == '\\'){ escribir_alt_code(KC_KP_9, KC_KP_2); continue; } 
+        
         uint16_t kc = 0;
-        uint8_t mod = 0; // Modificador (0x02 = Left Shift)
+        uint8_t mod = 0; 
 
-        // Traductor ASCII a HID Keycodes (Layout US)
         if (c >= 'a' && c <= 'z') kc = KC_A + (c - 'a');
         else if (c >= 'A' && c <= 'Z') { kc = KC_A + (c - 'A'); mod = 0x02; }
         else if (c >= '1' && c <= '9') kc = KC_1 + (c - '1');
         else if (c == '0') kc = KC_0;
-        else if (c == ':') { kc = KC_SCOLON; mod = 0x02; } // Shift + ; = :
-        else if (c == '\\') kc = KC_BSLASH;
-        else if (c == '.') kc = KC_DOT;
-        else if (c == ' ') kc = KC_SPACE;
+        else if (c == '.') kc = KC_DOT;   
+        else if (c == ' ') kc = KC_SPACE; 
 
         if (kc != 0) {
-            // Presionar tecla
-            seq_report[0] = mod;
-            seq_report[2] = kc;
-            xQueueSend(keyboard_q, seq_report, 0);
-            
-            // Soltar tecla
-            seq_report[0] = 0;
-            seq_report[2] = 0;
-            xQueueSend(keyboard_q, seq_report, 0);
-            
-            vTaskDelay(pdMS_TO_TICKS(15)); // Velocidad de tipeo
+            enviar_tecla_segura(mod, kc);
         }
     }
 }
 
-
 void ejecutar_macro_launcher(uint8_t os_type, const char* app_alias) {
-    uint8_t seq_report[REPORT_LEN] = {0};
+    uint8_t report[REPORT_LEN] = {0};
 
-    // 1. Abrir lanzador del SO
-    if (os_type == 0 || os_type == 2) { 
-        seq_report[0] = 0x08; // Modificador Left GUI (Win/Super)
-        if (os_type == 0) seq_report[2] = KC_R; // Si es Windows, sumamos la 'R' (Win+R)
-        xQueueSend(keyboard_q, seq_report, 0);
+    if (os_type == 0) { 
+        report[0] = 0x08; 
+        xQueueSend(keyboard_q, report, 0);
+        vTaskDelay(pdMS_TO_TICKS(30)); 
+        
+        report[2] = KC_R; 
+        xQueueSend(keyboard_q, report, 0);
     } else if (os_type == 1) { 
-        seq_report[0] = 0x08; // Cmd
-        seq_report[2] = KC_SPACE; // Espacio (Spotlight)
-        xQueueSend(keyboard_q, seq_report, 0);
+        report[0] = 0x08; 
+        xQueueSend(keyboard_q, report, 0);
+        vTaskDelay(pdMS_TO_TICKS(30));
+        
+        report[2] = KC_SPACE; 
+        xQueueSend(keyboard_q, report, 0);
+    } else if (os_type == 2) {
+        report[0] = 0x08; 
+        xQueueSend(keyboard_q, report, 0);
     }
     
-    // Soltar teclas y esperar que el SO abra la ventana
-    seq_report[0] = 0; seq_report[2] = 0;
-    xQueueSend(keyboard_q, seq_report, 0);
-    vTaskDelay(pdMS_TO_TICKS(350)); // LA PAUSA CRÍTICA
-
-    // 2. Construir la ruta final según el Sistema Operativo
-    char ruta_final[64] = "";
+    vTaskDelay(pdMS_TO_TICKS(100)); 
     
+   
+    report[0] = 0; 
+    report[2] = 0;
+    xQueueSend(keyboard_q, report, 0);
+    
+
+    vTaskDelay(pdMS_TO_TICKS(350)); 
+
+
+    char ruta_final[64] = "";
     if (os_type == 0) {
-        // En Windows: Ejecutamos desde la carpeta de macros
-        strcat(ruta_final, "C:\\Macros\\");
+        strcat(ruta_final, "c:\\macros\\"); 
         strcat(ruta_final, app_alias);
         strcat(ruta_final, ".lnk");
     } else {
-        // En Mac (Spotlight) o Linux (Gnome): Buscar solo por el nombre es nativo y más seguro
         strcat(ruta_final, app_alias);
     }
-
-    // Tipear la ruta construida
+    
     escribir_cadena_hid(ruta_final);
 
-    // 3. Pausa de seguridad y presionar Enter
     vTaskDelay(pdMS_TO_TICKS(50));
-    seq_report[0] = 0;
-    seq_report[2] = KC_ENTER;
-    xQueueSend(keyboard_q, seq_report, 0);
-    seq_report[2] = 0;
-    xQueueSend(keyboard_q, seq_report, 0);
+    enviar_tecla_segura(0, KC_ENTER);
 }
 
 // checking if a modifier key was pressed

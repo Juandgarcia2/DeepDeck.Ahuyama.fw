@@ -5,7 +5,7 @@ from tkinter import filedialog, messagebox, ttk
 import win32com.client
 
 # --- CONFIGURATION ---
-MACROS_FOLDER = r"C:\Macros"
+MACROS_FOLDER = r"C:\macros"
 
 def prepare_hidden_folder(path):
     """Creates the folder if it doesn't exist and applies the 'Hidden' attribute"""
