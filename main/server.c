@@ -285,20 +285,20 @@ esp_err_t get_macros_url_handler(httpd_req_t *req)
 			abort();
 		cJSON_AddItemToObject(macro_data, "keycode", macro_keycode);
 
-		macro_type =  cJSON_CreateNumber(dd_macros_lst.item[index].macro_type);
-		if (macro_type == NULL)
-			abort();
-		cJSON_AddItemToObject(macro_data, "macro_type", macro_type);
+		// macro_type =  cJSON_CreateNumber(dd_macros_lst.item[index].macro_type);//TODO: enable when fields are ready
+		// if (macro_type == NULL)
+		// 	abort();
+		// cJSON_AddItemToObject(macro_data, "macro_type", macro_type);
 
-		os_type =  cJSON_CreateNumber(dd_macros_lst.item[index].os_type);
-		if (os_type == NULL)
-			abort();
-		cJSON_AddItemToObject(macro_data, "os_type", os_type);
+		// os_type =  cJSON_CreateNumber(dd_macros_lst.item[index].os_type);
+		// if (os_type == NULL)
+		// 	abort();
+		// cJSON_AddItemToObject(macro_data, "os_type", os_type);
 
-		app_alias = cJSON_CreateString(dd_macros_lst.item[index].app_alias);
-		if (app_alias == NULL)
-			abort();
-		cJSON_AddItemToObject(macro_data, "app_alias", app_alias);
+		// app_alias = cJSON_CreateString(dd_macros_lst.item[index].app_alias);
+		// if (app_alias == NULL)
+		// 	abort();
+		// cJSON_AddItemToObject(macro_data, "app_alias", app_alias);
 
 		macro_key = cJSON_CreateArray();
 		if (macro_key == NULL)
@@ -578,6 +578,21 @@ esp_err_t update_macro_url_handler(httpd_req_t *req)
 		new_macro.keycode = keycode->valueint;
 	}
 
+	cJSON *m_type = cJSON_GetObjectItem(payload, "macro_type");
+    if (cJSON_IsNumber(m_type)){
+		new_macro.macro_type = m_type->valueint;
+	} else new_macro.macro_type = 0;
+
+    cJSON *o_type = cJSON_GetObjectItem(payload, "os_type");
+    if (cJSON_IsNumber(o_type)){
+		new_macro.os_type = o_type->valueint;
+	} else new_macro.os_type = 0;
+
+    cJSON *a_alias = cJSON_GetObjectItem(payload, "app_alias");
+    if (cJSON_IsString(a_alias) && (a_alias->valuestring != NULL)) {
+        strncpy(new_macro.app_alias, a_alias->valuestring, sizeof(new_macro.app_alias) - 1);
+    }else strncpy(new_macro.app_alias, "NoApp", sizeof(new_macro.app_alias) - 1);
+
 	cJSON *key = cJSON_GetObjectItem(payload, "key");
 
 	size_t array_size = cJSON_GetArraySize(key);
@@ -607,7 +622,9 @@ esp_err_t update_macro_url_handler(httpd_req_t *req)
 		}
 	}
 
-	ESP_LOGI(TAG, "new_macro.name: %s, new_macro.keycode: %d", new_macro.name, new_macro.keycode);
+	// ESP_LOGI(TAG, "new_macro.name: %s, new_macro.keycode: %d", new_macro.name, new_macro.keycode);
+	ESP_LOGE(TAG,"new_macro.name: %s, new_macro.keycode: %d new_macro.type: %u, new_macro.os_type: %u, new_macro.app_alias: %s\n",new_macro.name, new_macro.keycode, new_macro.macro_type, new_macro.os_type, new_macro.app_alias);
+
 	esp_err_t error;
 	error = nvs_update_macros(new_macro);
 	if (error != ESP_OK)
