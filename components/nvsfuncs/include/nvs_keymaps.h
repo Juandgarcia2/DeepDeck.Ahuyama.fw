@@ -150,6 +150,9 @@ typedef struct dd_macros_str
 	uint8_t key_len;
 	char name[USER_MACRO_NAME_LEN]; //  200 macros ---> Name of each macro up to 32 characters
 	uint16_t keycode;
+	uint8_t macro_type; // 0 = Normal, 1 = App Launcher
+    uint8_t os_type;    // 0 = Windows, 1 = Mac, 2 = Linux
+    char app_alias[16];
 } dd_macros;
 
 typedef struct

@@ -61,6 +61,85 @@ uint8_t macro_release[3] = {0};
 uint8_t layer_hold_flag = 0;
 uint8_t prev_layout = 0;
 
+void escribir_cadena_hid(const char* str) {
+    uint8_t seq_report[REPORT_LEN] = {0};
+    
+    for(int i = 0; i < strlen(str); i++) {
+        char c = str[i];
+        uint16_t kc = 0;
+        uint8_t mod = 0; // Modificador (0x02 = Left Shift)
+
+        // Traductor ASCII a HID Keycodes (Layout US)
+        if (c >= 'a' && c <= 'z') kc = KC_A + (c - 'a');
+        else if (c >= 'A' && c <= 'Z') { kc = KC_A + (c - 'A'); mod = 0x02; }
+        else if (c >= '1' && c <= '9') kc = KC_1 + (c - '1');
+        else if (c == '0') kc = KC_0;
+        else if (c == ':') { kc = KC_SCOLON; mod = 0x02; } // Shift + ; = :
+        else if (c == '\\') kc = KC_BSLASH;
+        else if (c == '.') kc = KC_DOT;
+        else if (c == ' ') kc = KC_SPACE;
+
+        if (kc != 0) {
+            // Presionar tecla
+            seq_report[0] = mod;
+            seq_report[2] = kc;
+            xQueueSend(keyboard_q, seq_report, 0);
+            
+            // Soltar tecla
+            seq_report[0] = 0;
+            seq_report[2] = 0;
+            xQueueSend(keyboard_q, seq_report, 0);
+            
+            vTaskDelay(pdMS_TO_TICKS(15)); // Velocidad de tipeo
+        }
+    }
+}
+
+
+void ejecutar_macro_launcher(uint8_t os_type, const char* app_alias) {
+    uint8_t seq_report[REPORT_LEN] = {0};
+
+    // 1. Abrir lanzador del SO
+    if (os_type == 0 || os_type == 2) { 
+        seq_report[0] = 0x08; // Modificador Left GUI (Win/Super)
+        if (os_type == 0) seq_report[2] = KC_R; // Si es Windows, sumamos la 'R' (Win+R)
+        xQueueSend(keyboard_q, seq_report, 0);
+    } else if (os_type == 1) { 
+        seq_report[0] = 0x08; // Cmd
+        seq_report[2] = KC_SPACE; // Espacio (Spotlight)
+        xQueueSend(keyboard_q, seq_report, 0);
+    }
+    
+    // Soltar teclas y esperar que el SO abra la ventana
+    seq_report[0] = 0; seq_report[2] = 0;
+    xQueueSend(keyboard_q, seq_report, 0);
+    vTaskDelay(pdMS_TO_TICKS(350)); // LA PAUSA CRÍTICA
+
+    // 2. Construir la ruta final según el Sistema Operativo
+    char ruta_final[64] = "";
+    
+    if (os_type == 0) {
+        // En Windows: Ejecutamos desde la carpeta de macros
+        strcat(ruta_final, "C:\\Macros\\");
+        strcat(ruta_final, app_alias);
+        strcat(ruta_final, ".lnk");
+    } else {
+        // En Mac (Spotlight) o Linux (Gnome): Buscar solo por el nombre es nativo y más seguro
+        strcat(ruta_final, app_alias);
+    }
+
+    // Tipear la ruta construida
+    escribir_cadena_hid(ruta_final);
+
+    // 3. Pausa de seguridad y presionar Enter
+    vTaskDelay(pdMS_TO_TICKS(50));
+    seq_report[0] = 0;
+    seq_report[2] = KC_ENTER;
+    xQueueSend(keyboard_q, seq_report, 0);
+    seq_report[2] = 0;
+    xQueueSend(keyboard_q, seq_report, 0);
+}
+
 // checking if a modifier key was pressed
 uint16_t check_modifier(uint16_t key)
 {
@@ -336,7 +415,7 @@ typedef enum
 	S_TAPDANCE
 } keys_lk_fsm_t;
 
-void keys_get_report_from_event(dd_layer *keymap, keys_event_struct_t key_event, uint8_t *report_state)
+	void keys_get_report_from_event(dd_layer *keymap, keys_event_struct_t key_event, uint8_t *report_state)
 {
 	// Send RGB notification on key changed.
 	uint8_t row = key_event.key_pos / MATRIX_ROWS;
@@ -573,6 +652,12 @@ void keys_get_report_from_event(dd_layer *keymap, keys_event_struct_t key_event,
 				}
 				else
 				{
+					uint8_t m_idx = keycode - MACRO_BASE_VAL;
+                    if (dd_macros_lst.item[m_idx].macro_type == 1) { //if is app launcher macro
+                        ejecutar_macro_launcher(dd_macros_lst.item[m_idx].os_type, dd_macros_lst.item[m_idx].app_alias);
+                        return; 
+                    }
+
 					ESP_LOGW(TAG, "keycode %u ", keycode);
 					ESP_LOGW(TAG, "key_len %u ", dd_macros_lst.item[keycode - MACRO_BASE_VAL].key_len);
 					for (uint8_t i = 0; i < dd_macros_lst.item[keycode - MACRO_BASE_VAL].key_len; i++)
@@ -618,6 +703,8 @@ void keys_get_report_from_event(dd_layer *keymap, keys_event_struct_t key_event,
 				}
 				else
 				{
+					if (dd_macros_lst.item[keycode - MACRO_BASE_VAL].macro_type == 1) return;
+
 					for (uint8_t i = 0; i < dd_macros_lst.item[keycode - MACRO_BASE_VAL].key_len; i++)
 					{
 						uint16_t key = dd_macros_lst.item[keycode - MACRO_BASE_VAL].key[i];

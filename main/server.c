@@ -230,6 +230,9 @@ esp_err_t get_macros_url_handler(httpd_req_t *req)
 	cJSON *macro_name = NULL;
 	cJSON *macro_keycode = NULL;
 	cJSON *macro_key = NULL;
+	cJSON *macro_type = NULL;
+	cJSON *os_type = NULL;
+	cJSON *app_alias = NULL;
 
 	cJSON *macro_object = cJSON_CreateObject();
 	if (macro_object == NULL)
@@ -281,6 +284,21 @@ esp_err_t get_macros_url_handler(httpd_req_t *req)
 		if (macro_keycode == NULL)
 			abort();
 		cJSON_AddItemToObject(macro_data, "keycode", macro_keycode);
+
+		macro_type =  cJSON_CreateNumber(dd_macros_lst.item[index].macro_type);
+		if (macro_type == NULL)
+			abort();
+		cJSON_AddItemToObject(macro_data, "macro_type", macro_type);
+
+		os_type =  cJSON_CreateNumber(dd_macros_lst.item[index].os_type);
+		if (os_type == NULL)
+			abort();
+		cJSON_AddItemToObject(macro_data, "os_type", os_type);
+
+		app_alias = cJSON_CreateString(dd_macros_lst.item[index].app_alias);
+		if (app_alias == NULL)
+			abort();
+		cJSON_AddItemToObject(macro_data, "app_alias", app_alias);
 
 		macro_key = cJSON_CreateArray();
 		if (macro_key == NULL)
@@ -371,6 +389,17 @@ esp_err_t create_macro_url_handler(httpd_req_t *req)
 	{
 		new_macro.keycode = keycode->valueint;
 	}
+
+	cJSON *m_type = cJSON_GetObjectItem(payload, "macro_type");
+    if (cJSON_IsNumber(m_type)) new_macro.macro_type = m_type->valueint;
+
+    cJSON *o_type = cJSON_GetObjectItem(payload, "os_type");
+    if (cJSON_IsNumber(o_type)) new_macro.os_type = o_type->valueint;
+
+    cJSON *a_alias = cJSON_GetObjectItem(payload, "app_alias");
+    if (cJSON_IsString(a_alias) && (a_alias->valuestring != NULL)) {
+        strncpy(new_macro.app_alias, a_alias->valuestring, sizeof(new_macro.app_alias) - 1);
+    }
 
 	cJSON *key = cJSON_GetObjectItem(payload, "key");
 
