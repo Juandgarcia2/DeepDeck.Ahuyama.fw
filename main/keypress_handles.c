@@ -126,52 +126,66 @@ void escribir_cadena_hid(const char* str) {
     }
 }
 
-void ejecutar_macro_launcher(uint8_t os_type, const char* app_alias) {
+void ejecutar_macro_launcher(uint8_t macro_type, uint8_t os_type, const char* app_alias) {
     uint8_t report[REPORT_LEN] = {0};
+	char ruta_final[64] = "";
 
-    if (os_type == 0) { 
-        report[0] = 0x08; 
-        xQueueSend(keyboard_q, report, 0);
-        vTaskDelay(pdMS_TO_TICKS(30)); 
-        
-        report[2] = KC_R; 
-        xQueueSend(keyboard_q, report, 0);
-    } else if (os_type == 1) { 
-        report[0] = 0x08; 
-        xQueueSend(keyboard_q, report, 0);
-        vTaskDelay(pdMS_TO_TICKS(30));
-        
-        report[2] = KC_SPACE; 
-        xQueueSend(keyboard_q, report, 0);
-    } else if (os_type == 2) {
-        report[0] = 0x08; 
-        xQueueSend(keyboard_q, report, 0);
-    }
+	switch (macro_type)
+	{
+	case 1:
+		if (os_type == 0) { 
+			report[0] = 0x08; 
+			xQueueSend(keyboard_q, report, 0);
+			vTaskDelay(pdMS_TO_TICKS(30)); 
+			
+			report[2] = KC_R; 
+			xQueueSend(keyboard_q, report, 0);
+		} else if (os_type == 1) { 
+			report[0] = 0x08; 
+			xQueueSend(keyboard_q, report, 0);
+			vTaskDelay(pdMS_TO_TICKS(30));
+			
+			report[2] = KC_SPACE; 
+			xQueueSend(keyboard_q, report, 0);
+		} else if (os_type == 2) {
+			report[0] = 0x08; 
+			xQueueSend(keyboard_q, report, 0);
+		}
+		
+		vTaskDelay(pdMS_TO_TICKS(100)); 
+		
+	
+		report[0] = 0; 
+		report[2] = 0;
+		xQueueSend(keyboard_q, report, 0);
+		
+
+		vTaskDelay(pdMS_TO_TICKS(350)); 
+
+
+		if (os_type == 0) {
+			strcat(ruta_final, "c:\\macros\\"); 
+			strcat(ruta_final, app_alias);
+			strcat(ruta_final, ".lnk");
+		} else {
+			strcat(ruta_final, app_alias);
+		}
+		
+		escribir_cadena_hid(ruta_final);
+
+		vTaskDelay(pdMS_TO_TICKS(50));
+		enviar_tecla_segura(0, KC_ENTER);
+		break;
+
+	case 2:
+
+		strcat(ruta_final, app_alias);
+		escribir_cadena_hid(ruta_final);
+	
+	default:
+		break;
+	}
     
-    vTaskDelay(pdMS_TO_TICKS(100)); 
-    
-   
-    report[0] = 0; 
-    report[2] = 0;
-    xQueueSend(keyboard_q, report, 0);
-    
-
-    vTaskDelay(pdMS_TO_TICKS(350)); 
-
-
-    char ruta_final[64] = "";
-    if (os_type == 0) {
-        strcat(ruta_final, "c:\\macros\\"); 
-        strcat(ruta_final, app_alias);
-        strcat(ruta_final, ".lnk");
-    } else {
-        strcat(ruta_final, app_alias);
-    }
-    
-    escribir_cadena_hid(ruta_final);
-
-    vTaskDelay(pdMS_TO_TICKS(50));
-    enviar_tecla_segura(0, KC_ENTER);
 }
 
 // checking if a modifier key was pressed
@@ -687,8 +701,8 @@ typedef enum
 				else
 				{
 					uint8_t m_idx = keycode - MACRO_BASE_VAL;
-                    if (dd_macros_lst.item[m_idx].macro_type == 1) { //if is app launcher macro
-                        ejecutar_macro_launcher(dd_macros_lst.item[m_idx].os_type, dd_macros_lst.item[m_idx].app_alias);
+                    if (dd_macros_lst.item[m_idx].macro_type > 1) { //if is app launcher macro
+                        ejecutar_macro_launcher(dd_macros_lst.item[m_idx].macro_type, dd_macros_lst.item[m_idx].os_type, dd_macros_lst.item[m_idx].app_alias);
                         return; 
                     }
 
