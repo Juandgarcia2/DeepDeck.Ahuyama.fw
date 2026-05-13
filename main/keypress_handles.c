@@ -701,7 +701,7 @@ typedef enum
 				else
 				{
 					uint8_t m_idx = keycode - MACRO_BASE_VAL;
-                    if (dd_macros_lst.item[m_idx].macro_type > 1) { //if is app launcher macro
+                    if (dd_macros_lst.item[m_idx].macro_type >= 1) { //if is app launcher macro
                         ejecutar_macro_launcher(dd_macros_lst.item[m_idx].macro_type, dd_macros_lst.item[m_idx].os_type, dd_macros_lst.item[m_idx].app_alias);
                         return; 
                     }
