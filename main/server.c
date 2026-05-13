@@ -285,20 +285,20 @@ esp_err_t get_macros_url_handler(httpd_req_t *req)
 			abort();
 		cJSON_AddItemToObject(macro_data, "keycode", macro_keycode);
 
-		// macro_type =  cJSON_CreateNumber(dd_macros_lst.item[index].macro_type);//TODO: enable when fields are ready
-		// if (macro_type == NULL)
-		// 	abort();
-		// cJSON_AddItemToObject(macro_data, "macro_type", macro_type);
+		macro_type =  cJSON_CreateNumber(dd_macros_lst.item[index].macro_type);
+		if (macro_type == NULL)
+			abort();
+		cJSON_AddItemToObject(macro_data, "macro_type", macro_type);
 
-		// os_type =  cJSON_CreateNumber(dd_macros_lst.item[index].os_type);
-		// if (os_type == NULL)
-		// 	abort();
-		// cJSON_AddItemToObject(macro_data, "os_type", os_type);
+		os_type =  cJSON_CreateNumber(dd_macros_lst.item[index].os_type);
+		if (os_type == NULL)
+			abort();
+		cJSON_AddItemToObject(macro_data, "os_type", os_type);
 
-		// app_alias = cJSON_CreateString(dd_macros_lst.item[index].app_alias);
-		// if (app_alias == NULL)
-		// 	abort();
-		// cJSON_AddItemToObject(macro_data, "app_alias", app_alias);
+		app_alias = cJSON_CreateString(dd_macros_lst.item[index].app_alias);
+		if (app_alias == NULL)
+			abort();
+		cJSON_AddItemToObject(macro_data, "app_alias", app_alias);
 
 		macro_key = cJSON_CreateArray();
 		if (macro_key == NULL)
@@ -1985,6 +1985,13 @@ esp_err_t get_layer_url_handler(httpd_req_t *req)
 			cJSON *key = cJSON_CreateObject();
 			cJSON_AddStringToObject(key, "name", dd_layer_lst.item[pos].key_map_names[index][index_col]);
 			cJSON_AddNumberToObject(key, "key_code", dd_layer_lst.item[pos].key_map[index][index_col]);
+
+			cJSON *rgb_array = cJSON_CreateArray();
+			cJSON_AddItemToArray(rgb_array, cJSON_CreateNumber(dd_layer_lst.item[pos].key_map_colors[index][index_col].r));
+			cJSON_AddItemToArray(rgb_array, cJSON_CreateNumber(dd_layer_lst.item[pos].key_map_colors[index][index_col].g));
+			cJSON_AddItemToArray(rgb_array, cJSON_CreateNumber(dd_layer_lst.item[pos].key_map_colors[index][index_col].b));
+			cJSON_AddItemToObject(key, "rgb", rgb_array);
+			
 			cJSON_AddItemToArray(row, key);
 		}
 	}
@@ -2317,6 +2324,7 @@ void fill_row(cJSON *row, char names[][10], int codes[], dd_key_color_t colors[]
             colors[i].g = 0;
             colors[i].b = 0;
         }
+
 	}
 }
 
